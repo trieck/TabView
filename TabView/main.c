@@ -1,4 +1,6 @@
-#include <assert.h>
+
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <windows.h>
 #include <commctrl.h>
 #include <stdio.h>
@@ -51,7 +53,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return FALSE;
     }
 
-    hWndMain = CreateWindow(TAB_VIEW_FRAME_CLASS_NAME, "Win32 SDK Tab Control Test",
+    hWndMain = CreateWindow(TAB_VIEW_FRAME_CLASS_NAME, "Win32 SDK Tab View Test",
         WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 600, 400,
         NULL, NULL, hInstance, NULL);
 
@@ -132,12 +134,12 @@ HWND CreateView(HWND hWndParent, int index)
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
     DWORD dwExStyle = WS_EX_CLIENTEDGE;
 
-    HWND hWnd = CreateWindowEx(dwExStyle, WC_EDIT, "", dwStyle, 0, 0, 0, 0, hWndParent, NULL, GetModuleHandle(NULL), NULL);
+    HWND hWnd = CreateWindowEx(dwExStyle, "EDIT", "", dwStyle, 0, 0, 0, 0, hWndParent, NULL, GetModuleHandle(NULL), NULL);
     if (!hWnd) {
         return NULL;
     }
 
-    sprintf_s(text, sizeof(text), "View #%d", index + 1);
+    sprintf(text, "View #%d", index + 1);
 
     SendMessage(hWnd, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)text);
@@ -152,11 +154,13 @@ BOOL OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     HWND hWndView;
     LOGFONT lf;
     char tabTitle[256], text[256];
+	int nTabHeight, nViewBorder;
+	int i;
 
     memset(&lf, 0, sizeof(LOGFONT));
     lf.lfHeight = 18;
     lf.lfWeight = FW_SEMIBOLD;
-    strcpy_s(lf.lfFaceName, 9,"Seque UI");
+    strcpy(lf.lfFaceName, "Seque UI");
 
     memset(&tvi, 0, sizeof(TVWITEM));
     tvi.tci.mask = TCIF_TEXT;
@@ -180,14 +184,14 @@ BOOL OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
         
     SendMessage(hWndTabView, TVWM_SETTABCTRL, 0, (LPARAM)hWndTab);
 
-    int nTabHeight = (int)SendMessage(hWndTabView, TVWM_GETTABHEIGHT, 0, 0);
+    nTabHeight = (int)SendMessage(hWndTabView, TVWM_GETTABHEIGHT, 0, 0);
     SendMessage(hWndTabView, TVWM_SETTABHEIGHT, nTabHeight + 5, 0);
 
-    int nViewBorder = (int)SendMessage(hWndTabView, TVWM_GETVIEWBORDER, 0, 0);
+    nViewBorder = (int)SendMessage(hWndTabView, TVWM_GETVIEWBORDER, 0, 0);
     SendMessage(hWndTabView, TVWM_SETVIEWBORDER, nViewBorder + 3, 0);
 
-    for (int i = 0; i < 10; ++i) {
-        sprintf_s(tabTitle, sizeof(tabTitle), "Tab #%d", i + 1);
+    for (i = 0; i < 10; ++i) {
+        sprintf(tabTitle, "Tab #%d", i + 1);
         hWndView = CreateView(hWndTabView, i);
         if (!hWndView) {
             return FALSE;
@@ -197,7 +201,7 @@ BOOL OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
         tvi.hWndView = hWndView;
         SendMessage(hWndTabView, TVWM_ADDTAB, 0, (LPARAM)&tvi);
 
-        sprintf_s(text, sizeof(text), "*New* View #%d", i + 1);
+        sprintf(text, "*New* View #%d", i + 1);
         SendMessage(hWndView, WM_SETTEXT, 0, (LPARAM)text);
     }
     
@@ -211,7 +215,7 @@ void UpdateLayout(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 LRESULT OnNotify(HWND hWnd, int idFrom, LPNMHDR pnmhdr)
 {
-    if (pnmhdr->code == TVWN_CONTEXTMENU) {
+	if (pnmhdr->code == TVWN_CONTEXTMENU) {
         HMENU hMenu;
         TVWCONTEXTMENUINFO* pcmi = (TVWCONTEXTMENUINFO*)pnmhdr;
         POINT pt = pcmi->pt;

@@ -145,7 +145,7 @@ BOOL InitTabView(void)
 {
     static LONG bTabViewRegistered = 0;
 
-    if (InterlockedCompareExchange(&bTabViewRegistered, 1, 0) == 0) {
+    if (InterlockedExchange(&bTabViewRegistered, 1) == 0) {
         WNDCLASS wc;
 
         memset(&wc, 0, sizeof(WNDCLASS));
@@ -180,13 +180,14 @@ LRESULT AddTab(LPTABVIEW pTabView, LPTVWITEM lptvwitem)
 LRESULT RemoveTab(LPTABVIEW pTabView, int index)
 {
     LRESULT result;
-    int nCount;
+	HWND hWndView, hWnd;
+    int nCount, i;
 
     if (!pTabView->hWndTabCtrl) {
         return 0;
     }
 
-    HWND hWndView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1));
+    hWndView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1));
     if (hWndView) {
         RemoveProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1));
         DestroyWindow(hWndView);
@@ -199,8 +200,8 @@ LRESULT RemoveTab(LPTABVIEW pTabView, int index)
 
     // Update property indexes
     nCount = TabCtrl_GetItemCount(pTabView->hWndTabCtrl);
-    for (int i = index; i < nCount; i++) {
-        HWND hWnd = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(i + 2));
+    for (i = index; i < nCount; i++) {
+        hWnd = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(i + 2));
         RemoveProp(pTabView->hWndTabCtrl, MAKEINTATOM(i + 2));
         SetProp(pTabView->hWndTabCtrl, MAKEINTATOM(i + 1), hWnd);
     }
@@ -268,8 +269,9 @@ LRESULT OnEraseBkgnd(LPTABVIEW pTabView, WPARAM wParam)
 
 void RemoveProps(const TABVIEW* pTabview)
 {
+	int i;
     int nCount = TabCtrl_GetItemCount(pTabview->hWndTabCtrl);
-    for (int i = 0; i < nCount; i++) {
+    for (i = 0; i < nCount; i++) {
         RemoveProp(pTabview->hWndTabCtrl, MAKEINTATOM(i + 1));
     }
 
@@ -278,14 +280,17 @@ void RemoveProps(const TABVIEW* pTabview)
 
 LRESULT SetActiveTab(LPTABVIEW pTabView, int index)
 {
+	int i, nCount;
+	HWND hWndView;
+
     if (!pTabView->hWndTabCtrl) {
         return 0;
     }
 
-    int nCount = TabCtrl_GetItemCount(pTabView->hWndTabCtrl);
+    nCount = TabCtrl_GetItemCount(pTabView->hWndTabCtrl);
 
-    for (int i = 0; i < nCount; i++) {
-        HWND hWndView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(i + 1));
+    for (i = 0; i < nCount; i++) {
+        hWndView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(i + 1));
 
         if (i == index) {
             TabCtrl_SetCurSel(pTabView->hWndTabCtrl, i);
@@ -352,11 +357,13 @@ LRESULT OnContextMenu(LPTABVIEW pTabView, WPARAM wParam, LPARAM lParam)
 
 LRESULT SetView(LPTABVIEW pTabView, int index, HWND hWndView)
 {
+	HWND hWndOldView;
+
     if (!pTabView->hWndTabCtrl) {
         return 0;
     }
 
-    HWND hWndOldView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1));
+    hWndOldView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1));
     if (hWndOldView) {
         RemoveProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1));
         DestroyWindow(hWndOldView);
