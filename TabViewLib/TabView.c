@@ -141,7 +141,7 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return result;
 }
 
-BOOL InitTabView(void)
+BOOL WINAPI InitTabView(void)
 {
     static LONG bTabViewRegistered = 0;
 

@@ -48,4 +48,13 @@ typedef struct tagTVWCONTEXTMENUINFO
 } TVWCONTEXTMENUINFO, * LPTVWCONTEXTMENUINFO;
 
 // TabView Control Functions
-BOOL InitTabView(void);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+BOOL WINAPI InitTabView(void);
+
+#ifdef __cplusplus
+}
+#endif
