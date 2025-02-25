@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TabView.h"
 
 typedef struct tagTABVIEW
@@ -18,6 +19,7 @@ static LRESULT OnEraseBkgnd(LPTABVIEW pTabView, WPARAM wParam);
 static LRESULT SetActiveTab(LPTABVIEW pTabView, int index);
 static LRESULT OnNotify(LPTABVIEW pTabView, int idFrom, LPNMHDR pnmhdr);
 static LRESULT OnContextMenu(LPTABVIEW pTabView, WPARAM wParam, LPARAM lParam);
+static LRESULT SetView(LPTABVIEW pTabView, int index, HWND hWndView);
 static void RemoveProps(const TABVIEW* pTabview);
 static void UpdateLayout(LPTABVIEW pTabView, WPARAM type, LPARAM lParam);
 static void UpdateClientLayout(LPTABVIEW pTabView);
@@ -94,6 +96,24 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     case TVWM_REMOVETAB:
         result = RemoveTab(pTabView, (int)wParam);
+        break;
+    case TVWM_GETVIEW:
+        if (pTabView) {
+            result = (LRESULT)GetProp(pTabView->hWndTabCtrl, MAKEINTATOM((int)wParam + 1));
+        }
+        break;
+    case TVWM_SETVIEW:
+        if (pTabView) {
+            result = SetView(pTabView, (int)wParam, (HWND)lParam);
+        }
+        break;
+    case TVWM_HITTEST:
+        if (pTabView) {
+            TCHITTESTINFO hti;
+            hti.pt.x = LOWORD(lParam);
+            hti.pt.y = HIWORD(lParam);
+            result = TabCtrl_HitTest(pTabView->hWndTabCtrl, &hti);
+        }
         break;
     case WM_SIZE:
         UpdateLayout(pTabView, wParam, lParam);
@@ -328,4 +348,23 @@ LRESULT OnContextMenu(LPTABVIEW pTabView, WPARAM wParam, LPARAM lParam)
     SendMessage(GetParent(pTabView->hWnd), WM_NOTIFY, TVWN_CONTEXTMENU, (LPARAM)&cmInfo);
 
     return 0;
+}
+
+LRESULT SetView(LPTABVIEW pTabView, int index, HWND hWndView)
+{
+    if (!pTabView->hWndTabCtrl) {
+        return 0;
+    }
+
+    HWND hWndOldView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1));
+    if (hWndOldView) {
+        RemoveProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1));
+        DestroyWindow(hWndOldView);
+    }
+
+    SetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1), hWndView);
+
+    UpdateClientLayout(pTabView);
+
+    return 1;
 }

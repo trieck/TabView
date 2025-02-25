@@ -15,8 +15,7 @@ HFONT hFont = NULL;
 static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 static HWND CreateTabView(HWND hWndParent);
 static HWND CreateTabControl(HWND hWndParent);
-static HWND CreateView(HWND hWndParent);
-static HWND CreateView2(HWND hWndParent);
+static HWND CreateView(HWND hWndParent, int index);
 static BOOL OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static void UpdateLayout(HWND hWnd, WPARAM wParam, LPARAM lParam);
 static LRESULT OnNotify(HWND hWnd, int idFrom, LPNMHDR pnmhdr);
@@ -53,12 +52,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     hWndMain = CreateWindow(TAB_VIEW_FRAME_CLASS_NAME, "Win32 SDK Tab Control Test",
-        WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 400, 300,
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 600, 400,
         NULL, NULL, hInstance, NULL);
 
     if (!hWndMain) {
         return -1;
     }
+
+    ShowWindow(hWndMain, nShowCmd);
+    UpdateWindow(hWndMain);
 
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
@@ -123,34 +125,22 @@ HWND CreateTabControl(HWND hWndParent)
     return hWnd;
 }
 
-HWND CreateView(HWND hWndParent)
+HWND CreateView(HWND hWndParent, int index)
 {
+    char text[256];
+
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
     DWORD dwExStyle = WS_EX_CLIENTEDGE;
 
-    HWND hWnd = CreateWindowEx(dwExStyle, "EDIT", "", dwStyle, 0, 0, 0, 0, hWndParent, NULL, GetModuleHandle(NULL), NULL);
+    HWND hWnd = CreateWindowEx(dwExStyle, WC_EDIT, "", dwStyle, 0, 0, 0, 0, hWndParent, NULL, GetModuleHandle(NULL), NULL);
     if (!hWnd) {
         return NULL;
     }
 
-    SendMessage(hWnd, WM_SETFONT, (WPARAM)hFont, TRUE);
-    SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)"This is text for View#1.");
-
-    return hWnd;
-}
-
-HWND CreateView2(HWND hWndParent)
-{
-    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL;
-    DWORD dwExStyle = WS_EX_CLIENTEDGE;
-
-    HWND hWnd = CreateWindowEx(dwExStyle, "EDIT", "", dwStyle, 0, 0, 0, 0, hWndParent, NULL, GetModuleHandle(NULL), NULL);
-    if (!hWnd) {
-        return NULL;
-    }
+    sprintf_s(text, sizeof(text), "View #%d", index + 1);
 
     SendMessage(hWnd, WM_SETFONT, (WPARAM)hFont, TRUE);
-    SendMessageA(hWnd, WM_SETTEXT, 0, (LPARAM)"This is text for View#2.");
+    SendMessage(hWnd, WM_SETTEXT, 0, (LPARAM)text);
 
     return hWnd;
 }
@@ -160,13 +150,18 @@ BOOL OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     TVWITEM tvi;
     HWND hWndTab;
     HWND hWndView;
-    HWND hWndView2;
     LOGFONT lf;
+    char tabTitle[256], text[256];
 
     memset(&lf, 0, sizeof(LOGFONT));
     lf.lfHeight = 18;
     lf.lfWeight = FW_SEMIBOLD;
     strcpy_s(lf.lfFaceName, 9,"Seque UI");
+
+    memset(&tvi, 0, sizeof(TVWITEM));
+    tvi.tci.mask = TCIF_TEXT;
+    tvi.tci.pszText = tabTitle;
+    tvi.tci.cchTextMax = sizeof(tabTitle);
 
     hFont = CreateFontIndirect(&lf);
     if (!hFont) {
@@ -182,31 +177,8 @@ BOOL OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     if (!hWndTab) {
         return FALSE;
     }
-
-    hWndView = CreateView(hWndTabView);
-    if (!hWndView) {
-        return FALSE;
-    }
-
+        
     SendMessage(hWndTabView, TVWM_SETTABCTRL, 0, (LPARAM)hWndTab);
-
-    memset(&tvi, 0, sizeof(TVWITEM));
-    tvi.tci.mask = TCIF_TEXT;
-    tvi.tci.pszText = "Tab 1";
-    tvi.hWndView = hWndView;
-
-    SendMessage(hWndTabView, TVWM_ADDTAB, 0, (LPARAM)&tvi);
-
-    hWndView2 = CreateView2(hWndTabView);
-    if (!hWndView2) {
-        return FALSE;
-    }
-
-    tvi.tci.pszText = "Tab 2";
-    tvi.hWndView = hWndView2;
-
-    SendMessage(hWndTabView, TVWM_ADDTAB, 0, (LPARAM)&tvi);
-    SendMessage(hWndTabView, TVWM_SETACTIVETAB, 0, 0);
 
     int nTabHeight = (int)SendMessage(hWndTabView, TVWM_GETTABHEIGHT, 0, 0);
     SendMessage(hWndTabView, TVWM_SETTABHEIGHT, nTabHeight + 5, 0);
@@ -214,22 +186,21 @@ BOOL OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     int nViewBorder = (int)SendMessage(hWndTabView, TVWM_GETVIEWBORDER, 0, 0);
     SendMessage(hWndTabView, TVWM_SETVIEWBORDER, nViewBorder + 3, 0);
 
-    TCITEM tci;
-    memset(&tci, 0, sizeof(TCITEM));
-    tci.mask = TCIF_TEXT;
-    tci.pszText = "New Tab# 1";
+    for (int i = 0; i < 10; ++i) {
+        sprintf_s(tabTitle, sizeof(tabTitle), "Tab #%d", i + 1);
+        hWndView = CreateView(hWndTabView, i);
+        if (!hWndView) {
+            return FALSE;
+        }
 
-    SendMessage(hWndTabView, TVWM_SETTABITEM, 0, (LPARAM)&tci);
+        tvi.tci.pszText = tabTitle;
+        tvi.hWndView = hWndView;
+        SendMessage(hWndTabView, TVWM_ADDTAB, 0, (LPARAM)&tvi);
 
-    tci.pszText = "New Tab# 2";
-    SendMessage(hWndTabView, TVWM_SETTABITEM, 1, (LPARAM)&tci);
-
-    char buffer[1025];
-    tci.cchTextMax = sizeof(buffer);
-    tci.pszText = buffer;
-
-    SendMessage(hWndTabView, TVWM_GETTABITEM, 0, (LPARAM)&tci);
-
+        sprintf_s(text, sizeof(text), "*New* View #%d", i + 1);
+        SendMessage(hWndView, WM_SETTEXT, 0, (LPARAM)text);
+    }
+    
     return TRUE;
 }
 

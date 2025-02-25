@@ -15,7 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TabView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TabView.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

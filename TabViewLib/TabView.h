@@ -1,8 +1,5 @@
 #pragma once
 
-#include <windows.h>
-#include <commctrl.h>
-
 //====== TAB VIEW CONTROL ==========================================================
 
 #ifdef _UNICODE

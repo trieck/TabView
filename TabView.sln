@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35728.132 d17.12
+VisualStudioVersion = 17.12.35728.132
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TabView", "TabView\TabView.vcxproj", "{AEC3ED49-7A33-4534-A262-6B7AA767EAC4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TabViewLib", "TabViewLib\TabViewLib.vcxproj", "{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{AEC3ED49-7A33-4534-A262-6B7AA767EAC4}.Release|x64.Build.0 = Release|x64
 		{AEC3ED49-7A33-4534-A262-6B7AA767EAC4}.Release|x86.ActiveCfg = Release|Win32
 		{AEC3ED49-7A33-4534-A262-6B7AA767EAC4}.Release|x86.Build.0 = Release|Win32
+		{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}.Debug|x64.ActiveCfg = Debug|x64
+		{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}.Debug|x64.Build.0 = Debug|x64
+		{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}.Debug|x86.ActiveCfg = Debug|Win32
+		{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}.Debug|x86.Build.0 = Debug|Win32
+		{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}.Release|x64.ActiveCfg = Release|x64
+		{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}.Release|x64.Build.0 = Release|x64
+		{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}.Release|x86.ActiveCfg = Release|Win32
+		{BFD0FB0E-6477-4BB4-91B3-C372D43AC8C8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
