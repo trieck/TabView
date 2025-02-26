@@ -28,6 +28,7 @@
 #define TVWM_SETTABHEIGHT    (TVWM_FIRST + 12)
 #define TVWM_GETTABHEIGHT    (TVWM_FIRST + 13)
 #define TVWM_GETTABCOUNT     (TVWM_FIRST + 16)
+#define TVWM_GETTABCTRL      (TVWM_FIRST + 17)
 
 // TabView Control Notifications
 #define TVWN_FIRST           (0U - 0x1000)

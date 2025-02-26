@@ -49,6 +49,11 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             pTabView->hWndTabCtrl = (HWND)lParam;
         }
         break;
+    case TVWM_GETTABCTRL:
+        if (pTabView) {
+            result = (LRESULT)pTabView->hWndTabCtrl;
+        }
+        break;
     case TVWM_ADDTAB:
         result = AddTab(pTabView, (LPTVWITEM)lParam);
         break;
@@ -165,14 +170,20 @@ BOOL WINAPI InitTabView(void)
 
 LRESULT AddTab(LPTABVIEW pTabView, LPTVWITEM lptvwitem)
 {
-    if (pTabView->hWndTabCtrl) {
-        int nCount = TabCtrl_GetItemCount(pTabView->hWndTabCtrl);
-        int index = TabCtrl_InsertItem(pTabView->hWndTabCtrl, nCount, &lptvwitem->tci);
-        if (index != -1) {
-            SetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1), lptvwitem->hWndView);
-            return 0;
-        }
+    int nCount, index;
+
+    if (!pTabView->hWndTabCtrl) {
+        return 0;
     }
+
+    nCount = TabCtrl_GetItemCount(pTabView->hWndTabCtrl);
+    index = TabCtrl_InsertItem(pTabView->hWndTabCtrl, nCount, &lptvwitem->tci);
+    if (index == -1) {
+        return 0;
+    }
+
+    SetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1), lptvwitem->hWndView);
+    UpdateClientLayout(pTabView);
 
     return 1;
 }
