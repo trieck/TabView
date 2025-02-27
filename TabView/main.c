@@ -2,6 +2,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <windows.h>
+#include <tchar.h>
 #include <commctrl.h>
 #include <stdio.h>
 #include "TabView.h"
