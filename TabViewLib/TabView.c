@@ -7,6 +7,7 @@ typedef struct tagTABVIEW
     int nViewBorder;
     int nTabHeight;
     HWND hWndTabCtrl;
+    BOOL bUpdating;
 } TABVIEW, *LPTABVIEW;
 
 #define TABVIEW_PROP "TabViewData"
@@ -55,10 +56,29 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
     case TVWM_ADDTAB:
-        result = AddTab(pTabView, (LPTVWITEM)lParam);
+        if (pTabView) {
+            result = AddTab(pTabView, (LPTVWITEM)lParam);
+        }
+        break;
+    case TVWM_REMOVETAB:
+        if (pTabView) {
+            result = RemoveTab(pTabView, (int)wParam);
+        }
+        break;
+    case TVWM_SHOWTABCTRL:
+        if (pTabView) {
+            result = ShowWindow(pTabView->hWndTabCtrl, (int)wParam);
+        }
+        break;
+    case TVWM_GETACTIVETAB:
+        if (pTabView) {
+            result = TabCtrl_GetCurSel(pTabView->hWndTabCtrl);
+        }
         break;
     case TVWM_SETACTIVETAB:
-        result = SetActiveTab(pTabView, (int)wParam);
+        if (pTabView) {
+            result = SetActiveTab(pTabView, (int)wParam);
+        }
         break;
     case TVWM_SETVIEWBORDER:
         if (pTabView) {
@@ -99,9 +119,6 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             result = TabCtrl_GetItem(pTabView->hWndTabCtrl, (int)wParam, pitem);
         }
         break;
-    case TVWM_REMOVETAB:
-        result = RemoveTab(pTabView, (int)wParam);
-        break;
     case TVWM_GETVIEW:
         if (pTabView) {
             result = (LRESULT)GetProp(pTabView->hWndTabCtrl, MAKEINTATOM((int)wParam + 1));
@@ -121,7 +138,9 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_SIZE:
-        UpdateLayout(pTabView, wParam, lParam);
+        if (pTabView && !pTabView->bUpdating) {
+            UpdateLayout(pTabView, wParam, lParam);
+        }
         break;
     case WM_DESTROY:
         pTabView = (TABVIEW*)GetProp(hWnd, TABVIEW_PROP);
@@ -131,13 +150,19 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_ERASEBKGND:
-        result = OnEraseBkgnd(pTabView, wParam);
+        if (pTabView) {
+            result = OnEraseBkgnd(pTabView, wParam);
+        }        
         break;
     case WM_NOTIFY:
-        result = OnNotify(pTabView, (int)wParam, (LPNMHDR)lParam);
+        if (pTabView) {
+            result = OnNotify(pTabView, (int)wParam, (LPNMHDR)lParam);
+        }        
         break;
     case WM_CONTEXTMENU:
-        result = OnContextMenu(pTabView, wParam, lParam);
+        if (pTabView) {
+            result = OnContextMenu(pTabView, wParam, lParam);
+        }
         break;
     default:
         return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -183,6 +208,7 @@ LRESULT AddTab(LPTABVIEW pTabView, LPTVWITEM lptvwitem)
     }
 
     SetProp(pTabView->hWndTabCtrl, MAKEINTATOM(index + 1), lptvwitem->hWndView);
+
     UpdateClientLayout(pTabView);
 
     return 1;
@@ -226,42 +252,48 @@ LRESULT RemoveTab(LPTABVIEW pTabView, int index)
 
 void UpdateLayout(LPTABVIEW pTabView, WPARAM type, LPARAM lParam)
 {
-    RECT rcClient, rcTab, rcView;
     HWND hWndView;
     int nCurSel;
 
     int cx = LOWORD(lParam);
     int cy = HIWORD(lParam);
 
-    SetWindowPos(pTabView->hWnd, NULL, 0, 0, cx, cy, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE);
-
-    if (!pTabView->hWndTabCtrl) {
+    if (cx == 0 || cy == 0 || pTabView->bUpdating) {
         return;
     }
 
-    rcClient.left = 0;
-    rcClient.top = 0;
-    rcClient.right = cx;
-    rcClient.bottom = cy;
+    pTabView->bUpdating = TRUE;
 
+    SetWindowPos(pTabView->hWnd, NULL, 0, 0, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
+    
     // Tab Control
-    SetRect(&rcTab, rcClient.left, rcClient.top, rcClient.right, rcClient.top + pTabView->nTabHeight);
-    MoveWindow(pTabView->hWndTabCtrl, rcTab.left, rcTab.top, rcTab.right - rcTab.left, rcTab.bottom - rcTab.top,
-               TRUE);
+    if (pTabView->hWndTabCtrl) {
+        SetWindowPos(pTabView->hWndTabCtrl, NULL, 0, 0, cx, pTabView->nTabHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+    }
 
-    // View
+    // Active View, if any
     nCurSel = TabCtrl_GetCurSel(pTabView->hWndTabCtrl);
     hWndView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(nCurSel + 1));
     if (hWndView) {
-        SetRect(&rcView, rcClient.left + pTabView->nViewBorder, rcTab.bottom + pTabView->nViewBorder,
-                rcClient.right - pTabView->nViewBorder - 1, rcClient.bottom - pTabView->nViewBorder - 1);
-        MoveWindow(hWndView, rcView.left, rcView.top, rcView.right - rcView.left, rcView.bottom - rcView.top, TRUE);
+        SetWindowPos(hWndView, NULL,
+            pTabView->nViewBorder,
+            pTabView->nTabHeight + pTabView->nViewBorder,
+            cx - pTabView->nViewBorder * 2 - 1,
+            cy - pTabView->nTabHeight - pTabView->nViewBorder * 2 - 1,
+            SWP_NOZORDER | SWP_NOACTIVATE);
     }
+
+    pTabView->bUpdating = FALSE;
 }
 
 void UpdateClientLayout(LPTABVIEW pTabView)
 {
     RECT rcClient;
+
+    if (pTabView->bUpdating) {
+        return;
+    }
+
     GetClientRect(pTabView->hWnd, &rcClient);
     UpdateLayout(pTabView, SIZE_RESTORED, MAKELPARAM(rcClient.right, rcClient.bottom));
 }
@@ -274,7 +306,7 @@ LRESULT OnEraseBkgnd(LPTABVIEW pTabView, WPARAM wParam)
     GetClipBox(hDC, &rcClient);
 
     FillRect(hDC, &rcClient, (HBRUSH)(COLOR_APPWORKSPACE + 1));
-
+    
     return TRUE;
 }
 

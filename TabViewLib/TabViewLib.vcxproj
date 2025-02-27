@@ -87,6 +87,13 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>clang-tidy "$(ProjectDir)*.c" --  -std=gnu89 -pedantic
+</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>CLang Tidy C89</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -106,6 +113,13 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>clang-tidy "$(ProjectDir)*.c" --  -std=gnu89 -pedantic
+</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>CLang Tidy C89</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -121,6 +135,13 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>clang-tidy "$(ProjectDir)*.c" --  -std=gnu89 -pedantic
+</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>CLang Tidy C89</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -140,6 +161,13 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>clang-tidy "$(ProjectDir)*.c" --  -std=gnu89 -pedantic
+</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>CLang Tidy C89</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />

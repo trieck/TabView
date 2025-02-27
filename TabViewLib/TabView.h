@@ -13,22 +13,35 @@
 
 // Windows Messages
 #define TVWM_FIRST           (WM_USER + 0x1000)
+
+// Tab Control Management
 #define TVWM_SETTABCTRL      (TVWM_FIRST + 0)
-#define TVWM_ADDTAB          (TVWM_FIRST + 1)
-#define TVWM_REMOVETAB       (TVWM_FIRST + 2)
-#define TVWM_SETACTIVETAB    (TVWM_FIRST + 3)
-#define TVWM_GETACTIVETAB    (TVWM_FIRST + 4)
-#define TVWM_GETVIEW         (TVWM_FIRST + 5)
-#define TVWM_SETVIEW         (TVWM_FIRST + 6)
-#define TVWM_SETTABITEM      (TVWM_FIRST + 7)
-#define TVWM_GETTABITEM      (TVWM_FIRST + 8)
-#define TVWM_HITTEST         (TVWM_FIRST + 9)
+#define TVWM_GETTABCTRL      (TVWM_FIRST + 1)
+#define TVWM_SHOWTABCTRL     (TVWM_FIRST + 2)
+
+// Tab Management
+#define TVWM_ADDTAB          (TVWM_FIRST + 3)
+#define TVWM_REMOVETAB       (TVWM_FIRST + 4)
+#define TVWM_SETACTIVETAB    (TVWM_FIRST + 5)
+#define TVWM_GETACTIVETAB    (TVWM_FIRST + 6)
+#define TVWM_GETTABCOUNT     (TVWM_FIRST + 7)
+
+// View Management
+#define TVWM_GETVIEW         (TVWM_FIRST + 8)
+#define TVWM_SETVIEW         (TVWM_FIRST + 9)
 #define TVWM_SETVIEWBORDER   (TVWM_FIRST + 10)
 #define TVWM_GETVIEWBORDER   (TVWM_FIRST + 11)
-#define TVWM_SETTABHEIGHT    (TVWM_FIRST + 12)
-#define TVWM_GETTABHEIGHT    (TVWM_FIRST + 13)
-#define TVWM_GETTABCOUNT     (TVWM_FIRST + 16)
-#define TVWM_GETTABCTRL      (TVWM_FIRST + 17)
+
+// Tab Item Management
+#define TVWM_SETTABITEM      (TVWM_FIRST + 12)
+#define TVWM_GETTABITEM      (TVWM_FIRST + 13)
+
+// Tab Appearance
+#define TVWM_SETTABHEIGHT    (TVWM_FIRST + 14)
+#define TVWM_GETTABHEIGHT    (TVWM_FIRST + 15)
+
+// Miscellaneous
+#define TVWM_HITTEST         (TVWM_FIRST + 16)
 
 // TabView Control Notifications
 #define TVWN_FIRST           (0U - 0x1000)

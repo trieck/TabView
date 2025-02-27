@@ -9,7 +9,7 @@
 #pragma comment(lib, "comctl32.lib")
 
 // Global Variables
-HWND hWndMain = NULL;
+HWND hWndMain = NULL;   // this should fail in C89
 HWND hWndTabView = NULL;
 HFONT hFont = NULL;
 
@@ -48,7 +48,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hInstance = GetModuleHandle(NULL);
     wc.lpszClassName = TAB_VIEW_FRAME_CLASS_NAME;
     wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hbrBackground = (HBRUSH)(COLOR_APPWORKSPACE + 1);
     if (!RegisterClass(&wc)) {
         return FALSE;
     }
