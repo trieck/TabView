@@ -10,11 +10,14 @@ typedef struct tagTABVIEW
     BOOL bUpdating;
 } TABVIEW, *LPTABVIEW;
 
-#define TABVIEW_PROP "TabViewData"
+#define TABVIEW_PROP _T("TabViewData")
+
 #define DEFAULT_TAB_HEIGHT 40
 #define DEFAULT_VIEW_BORDER 6
 
-static LRESULT AddTab(LPTABVIEW pTabView, LPTVWITEM lptvwitem);
+static LRESULT AddTabA(LPTABVIEW pTabView, LPTVWITEM lptvwitem);
+static LRESULT AddTabW(LPTABVIEW pTabView, LPTVWITEM lptvwitem);
+static LRESULT AddTab(UINT msg, LPTABVIEW pTabView, LPTVWITEM lptvwitem);
 static LRESULT RemoveTab(LPTABVIEW pTabView, int index);
 static LRESULT OnEraseBkgnd(LPTABVIEW pTabView, WPARAM wParam);
 static LRESULT SetActiveTab(LPTABVIEW pTabView, int index);
@@ -55,9 +58,14 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             result = (LRESULT)pTabView->hWndTabCtrl;
         }
         break;
-    case TVWM_ADDTAB:
+    case TVWM_ADDTABA:
         if (pTabView) {
-            result = AddTab(pTabView, (LPTVWITEM)lParam);
+            result = AddTabA(pTabView, (LPTVWITEM)lParam);
+        }
+        break;
+    case TVWM_ADDTABW:
+        if (pTabView) {
+            result = AddTabW(pTabView, (LPTVWITEM)lParam);
         }
         break;
     case TVWM_REMOVETAB:
@@ -107,16 +115,24 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             result = TabCtrl_GetItemCount(pTabView->hWndTabCtrl);
         }
         break;
-    case TVWM_SETTABITEM:
+    case TVWM_SETTABITEMA:
         if (pTabView) {
-            LPTCITEM pitem = (LPTCITEM)lParam;
-            result = TabCtrl_SetItem(pTabView->hWndTabCtrl, (int)wParam, pitem);
+            result = SendMessage(pTabView->hWndTabCtrl, TCM_SETITEMA, wParam, lParam);
         }
         break;
-    case TVWM_GETTABITEM:
+    case TVWM_SETTABITEMW:
         if (pTabView) {
-            LPTCITEM pitem = (LPTCITEM)lParam;
-            result = TabCtrl_GetItem(pTabView->hWndTabCtrl, (int)wParam, pitem);
+            result = SendMessage(pTabView->hWndTabCtrl, TCM_SETITEMW, wParam, lParam);
+        }
+        break;
+    case TVWM_GETTABITEMA:
+        if (pTabView) {
+            result = SendMessage(pTabView->hWndTabCtrl, TCM_GETITEMA, wParam, lParam);
+        }
+        break;
+    case TVWM_GETTABITEMW:
+        if (pTabView) {
+            result = SendMessage(pTabView->hWndTabCtrl, TCM_GETITEMW, wParam, lParam);
         }
         break;
     case TVWM_GETVIEW:
@@ -193,7 +209,17 @@ BOOL WINAPI InitTabView(void)
     return TRUE;
 }
 
-LRESULT AddTab(LPTABVIEW pTabView, LPTVWITEM lptvwitem)
+LRESULT AddTabA(LPTABVIEW pTabView, LPTVWITEM lptvwitem)
+{
+    return AddTab(TCM_INSERTITEMA, pTabView, lptvwitem);
+}
+
+LRESULT AddTabW(LPTABVIEW pTabView, LPTVWITEM lptvwitem)
+{
+    return AddTab(TCM_INSERTITEMW, pTabView, lptvwitem);
+}
+
+LRESULT AddTab(UINT msg, LPTABVIEW pTabView, LPTVWITEM lptvwitem)
 {
     int nCount, index;
 
@@ -201,8 +227,13 @@ LRESULT AddTab(LPTABVIEW pTabView, LPTVWITEM lptvwitem)
         return 0;
     }
 
+    if (msg != TCM_INSERTITEMA && msg != TCM_INSERTITEMW) {
+        return 0;
+    }
+
     nCount = TabCtrl_GetItemCount(pTabView->hWndTabCtrl);
-    index = TabCtrl_InsertItem(pTabView->hWndTabCtrl, nCount, &lptvwitem->tci);
+
+    index = (int)SendMessage(pTabView->hWndTabCtrl, msg, nCount, (LPARAM)&lptvwitem->tci);
     if (index == -1) {
         return 0;
     }
@@ -275,12 +306,12 @@ void UpdateLayout(LPTABVIEW pTabView, WPARAM type, LPARAM lParam)
     nCurSel = TabCtrl_GetCurSel(pTabView->hWndTabCtrl);
     hWndView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(nCurSel + 1));
     if (hWndView) {
-        SetWindowPos(hWndView, NULL,
+        SetWindowPos(hWndView, HWND_TOP,
             pTabView->nViewBorder,
             pTabView->nTabHeight + pTabView->nViewBorder,
             cx - pTabView->nViewBorder * 2 - 1,
             cy - pTabView->nTabHeight - pTabView->nViewBorder * 2 - 1,
-            SWP_NOZORDER | SWP_NOACTIVATE);
+            SWP_SHOWWINDOW);
     }
 
     pTabView->bUpdating = FALSE;
@@ -337,7 +368,11 @@ LRESULT SetActiveTab(LPTABVIEW pTabView, int index)
 
         if (i == index) {
             TabCtrl_SetCurSel(pTabView->hWndTabCtrl, i);
-            ShowWindow(hWndView, SW_SHOW);
+
+            if (hWndView) {
+                SetFocus(hWndView);
+                ShowWindow(hWndView, SW_SHOW);
+            }
         } else {
             ShowWindow(hWndView, SW_HIDE);
         }

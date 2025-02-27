@@ -1,12 +1,7 @@
 #pragma once
 
 //====== TAB VIEW CONTROL ==========================================================
-
-#ifdef _UNICODE
-#define WC_TABVIEW L"TabView"
-#else
-#define WC_TABVIEW "TabView"
-#endif
+#define WC_TABVIEW _T("TabView")
 
 // TabView Control Styles
 #define TVS_NONE            0x00000000
@@ -20,34 +15,47 @@
 #define TVWM_SHOWTABCTRL     (TVWM_FIRST + 2)
 
 // Tab Management
-#define TVWM_ADDTAB          (TVWM_FIRST + 3)
-#define TVWM_REMOVETAB       (TVWM_FIRST + 4)
-#define TVWM_SETACTIVETAB    (TVWM_FIRST + 5)
-#define TVWM_GETACTIVETAB    (TVWM_FIRST + 6)
-#define TVWM_GETTABCOUNT     (TVWM_FIRST + 7)
+#define TVWM_ADDTABA         (TVWM_FIRST + 3)
+#define TVWM_ADDTABW         (TVWM_FIRST + 4)
+#define TVWM_REMOVETAB       (TVWM_FIRST + 5)
+#define TVWM_SETACTIVETAB    (TVWM_FIRST + 6)
+#define TVWM_GETACTIVETAB    (TVWM_FIRST + 7)
+#define TVWM_GETTABCOUNT     (TVWM_FIRST + 8)
 
 // View Management
-#define TVWM_GETVIEW         (TVWM_FIRST + 8)
-#define TVWM_SETVIEW         (TVWM_FIRST + 9)
-#define TVWM_SETVIEWBORDER   (TVWM_FIRST + 10)
-#define TVWM_GETVIEWBORDER   (TVWM_FIRST + 11)
+#define TVWM_GETVIEW         (TVWM_FIRST + 9)
+#define TVWM_SETVIEW         (TVWM_FIRST + 10)
+#define TVWM_SETVIEWBORDER   (TVWM_FIRST + 11)
+#define TVWM_GETVIEWBORDER   (TVWM_FIRST + 12)
 
 // Tab Item Management
-#define TVWM_SETTABITEM      (TVWM_FIRST + 12)
-#define TVWM_GETTABITEM      (TVWM_FIRST + 13)
+#define TVWM_SETTABITEMA     (TVWM_FIRST + 13)
+#define TVWM_SETTABITEMW     (TVWM_FIRST + 14)
+#define TVWM_GETTABITEMA     (TVWM_FIRST + 15)
+#define TVWM_GETTABITEMW     (TVWM_FIRST + 16)
 
 // Tab Appearance
-#define TVWM_SETTABHEIGHT    (TVWM_FIRST + 14)
-#define TVWM_GETTABHEIGHT    (TVWM_FIRST + 15)
+#define TVWM_SETTABHEIGHT    (TVWM_FIRST + 17)
+#define TVWM_GETTABHEIGHT    (TVWM_FIRST + 18)
 
 // Miscellaneous
-#define TVWM_HITTEST         (TVWM_FIRST + 16)
+#define TVWM_HITTEST         (TVWM_FIRST + 19)
 
 // TabView Control Notifications
 #define TVWN_FIRST           (0U - 0x1000)
 #define TVWN_SELCHANGING      (TVWN_FIRST - 1)
 #define TVWN_SELCHANGED       (TVWN_FIRST - 2)
 #define TVWN_CONTEXTMENU      (TVWN_FIRST - 3)
+
+#ifdef _UNICODE
+#define TVWM_ADDTAB TVWM_ADDTABW
+#define TVWM_SETTABITEM TVWM_SETTABITEMW
+#define TVWM_GETTABITEM TVWM_GETTABITEMW
+#else
+#define TVWM_ADDTAB TVWM_ADDTABA
+#define TVWM_SETTABITEM TVWM_SETTABITEMA
+#define TVWM_GETTABITEM TVWM_GETTABITEMA
+#endif
 
 // TabView Control Structures
 typedef struct tagTVWITEM {
