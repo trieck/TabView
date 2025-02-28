@@ -27,19 +27,23 @@
 #define TVWM_SETVIEW         (TVWM_FIRST + 10)
 #define TVWM_SETVIEWBORDER   (TVWM_FIRST + 11)
 #define TVWM_GETVIEWBORDER   (TVWM_FIRST + 12)
+#define TVWM_SETBKCOLOR      (TVWM_FIRST + 13)
+#define TVWM_GETBKCOLOR      (TVWM_FIRST + 14)
 
 // Tab Item Management
-#define TVWM_SETTABITEMA     (TVWM_FIRST + 13)
-#define TVWM_SETTABITEMW     (TVWM_FIRST + 14)
-#define TVWM_GETTABITEMA     (TVWM_FIRST + 15)
-#define TVWM_GETTABITEMW     (TVWM_FIRST + 16)
+#define TVWM_SETTABITEMA     (TVWM_FIRST + 15)
+#define TVWM_SETTABITEMW     (TVWM_FIRST + 16)
+#define TVWM_GETTABITEMA     (TVWM_FIRST + 17)
+#define TVWM_GETTABITEMW     (TVWM_FIRST + 18)
 
 // Tab Appearance
-#define TVWM_SETTABHEIGHT    (TVWM_FIRST + 17)
-#define TVWM_GETTABHEIGHT    (TVWM_FIRST + 18)
+#define TVWM_SETTABHEIGHT    (TVWM_FIRST + 19)
+#define TVWM_GETTABHEIGHT    (TVWM_FIRST + 20)
+#define TVWM_SETTOPMARGIN    (TVWM_FIRST + 21)
+#define TVWM_GETTOPMARGIN    (TVWM_FIRST + 22)
 
 // Miscellaneous
-#define TVWM_HITTEST         (TVWM_FIRST + 19)
+#define TVWM_HITTEST         (TVWM_FIRST + 23)
 
 // TabView Control Notifications
 #define TVWN_FIRST           (0U - 0x1000)

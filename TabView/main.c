@@ -161,7 +161,7 @@ BOOL OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
     memset(&lf, 0, sizeof(LOGFONT));
     lf.lfHeight = 18;
     lf.lfWeight = FW_SEMIBOLD;
-    strcpy(lf.lfFaceName, "Seque UI");
+    strcpy(lf.lfFaceName, "Tahoma");
 
     memset(&tvi, 0, sizeof(TVWITEM));
     tvi.tci.mask = TCIF_TEXT;

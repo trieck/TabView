@@ -6,15 +6,21 @@ typedef struct tagTABVIEW
     HWND hWnd;
     int nViewBorder;
     int nTabHeight;
+    int nTopMargin;
+    COLORREF cBkgndColor;
+    HBRUSH hBkgndBrush;
     HWND hWndTabCtrl;
     BOOL bUpdating;
 } TABVIEW, *LPTABVIEW;
 
 #define TABVIEW_PROP _T("TabViewData")
 
-#define DEFAULT_TAB_HEIGHT 40
+#define DEFAULT_TAB_HEIGHT 31
 #define DEFAULT_VIEW_BORDER 6
+#define DEFAULT_TOP_MARGIN 2
 
+static LPTABVIEW AllocTabView(HWND hWnd);
+static void FreeTabView(LPTABVIEW pTabView);
 static LRESULT AddTabA(LPTABVIEW pTabView, LPTVWITEM lptvwitem);
 static LRESULT AddTabW(LPTABVIEW pTabView, LPTVWITEM lptvwitem);
 static LRESULT AddTab(UINT msg, LPTABVIEW pTabView, LPTVWITEM lptvwitem);
@@ -24,7 +30,9 @@ static LRESULT SetActiveTab(LPTABVIEW pTabView, int index);
 static LRESULT OnNotify(LPTABVIEW pTabView, int idFrom, LPNMHDR pnmhdr);
 static LRESULT OnContextMenu(LPTABVIEW pTabView, WPARAM wParam, LPARAM lParam);
 static LRESULT SetView(LPTABVIEW pTabView, int index, HWND hWndView);
-static void RemoveProps(const TABVIEW* pTabview);
+static LRESULT SetBkgndColor(LPTABVIEW pTabView, COLORREF color);
+static LRESULT SetViewFocus(TABVIEW* tabview);
+static void OnPaint(LPTABVIEW pTabView);
 static void UpdateLayout(LPTABVIEW pTabView, WPARAM type, LPARAM lParam);
 static void UpdateClientLayout(LPTABVIEW pTabView);
 
@@ -37,15 +45,7 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         break;
     case WM_NCCREATE:
-        pTabView = GlobalAlloc(GPTR, sizeof(TABVIEW));
-        if (!pTabView) {
-            return -1;
-        }
-
-        pTabView->hWnd = hWnd;
-        pTabView->nViewBorder = DEFAULT_VIEW_BORDER;
-        pTabView->nTabHeight = DEFAULT_TAB_HEIGHT;
-        SetProp(hWnd, TABVIEW_PROP, pTabView);
+        AllocTabView(hWnd);
         result = 1;
         break;
     case TVWM_SETTABCTRL:
@@ -153,27 +153,56 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             result = TabCtrl_HitTest(pTabView->hWndTabCtrl, &hti);
         }
         break;
+    case TVWM_SETBKCOLOR:
+        if (pTabView) {
+            result = SetBkgndColor(pTabView, (int)wParam);
+        }
+        break;
+    case TVWM_GETBKCOLOR:
+        if (pTabView) {
+            result = (LRESULT)pTabView->cBkgndColor;
+        }
+        break;
+    case TVWM_SETTOPMARGIN:
+        if (pTabView) {
+            pTabView->nTopMargin = (int)wParam;
+            UpdateClientLayout(pTabView);
+        }
+        break;
+    case TVWM_GETTOPMARGIN:
+        if (pTabView) {
+            result = pTabView->nTopMargin;
+        }
+        break;
+    case WM_PAINT:
+        if (pTabView) {
+            OnPaint(pTabView);
+        }
+        break;
+    case WM_SETFOCUS:
+        if (pTabView) {
+            result = SetViewFocus(pTabView);
+        }
+        break;
     case WM_SIZE:
         if (pTabView && !pTabView->bUpdating) {
             UpdateLayout(pTabView, wParam, lParam);
         }
         break;
     case WM_DESTROY:
-        pTabView = (TABVIEW*)GetProp(hWnd, TABVIEW_PROP);
         if (pTabView) {
-            RemoveProps(pTabView);
-            GlobalFree(pTabView);
+            FreeTabView(pTabView);
         }
         break;
     case WM_ERASEBKGND:
         if (pTabView) {
             result = OnEraseBkgnd(pTabView, wParam);
-        }        
+        }
         break;
     case WM_NOTIFY:
         if (pTabView) {
             result = OnNotify(pTabView, (int)wParam, (LPNMHDR)lParam);
-        }        
+        }
         break;
     case WM_CONTEXTMENU:
         if (pTabView) {
@@ -207,6 +236,41 @@ BOOL WINAPI InitTabView(void)
     }
 
     return TRUE;
+}
+
+LPTABVIEW AllocTabView(HWND hWnd)
+{
+    LPTABVIEW pTabView = LocalAlloc(LPTR, sizeof(TABVIEW));
+    if (!pTabView) {
+        return NULL;
+    }
+
+    pTabView->hWnd = hWnd;
+    pTabView->nViewBorder = DEFAULT_VIEW_BORDER;
+    pTabView->nTabHeight = DEFAULT_TAB_HEIGHT;
+    pTabView->nTopMargin = DEFAULT_TOP_MARGIN;
+    pTabView->cBkgndColor = GetSysColor(COLOR_APPWORKSPACE);
+    pTabView->hBkgndBrush = CreateSolidBrush(pTabView->cBkgndColor);
+    pTabView->bUpdating = FALSE;
+
+    SetProp(hWnd, TABVIEW_PROP, pTabView);
+
+    return pTabView;
+}
+
+void FreeTabView(LPTABVIEW pTabView)
+{
+    if (!pTabView) {
+        return;
+    }
+
+    if (pTabView->hBkgndBrush) {
+        DeleteObject(pTabView->hBkgndBrush);
+    }
+
+    RemoveProp(pTabView->hWnd, TABVIEW_PROP);
+
+    LocalFree(pTabView);
 }
 
 LRESULT AddTabA(LPTABVIEW pTabView, LPTVWITEM lptvwitem)
@@ -248,7 +312,7 @@ LRESULT AddTab(UINT msg, LPTABVIEW pTabView, LPTVWITEM lptvwitem)
 LRESULT RemoveTab(LPTABVIEW pTabView, int index)
 {
     LRESULT result;
-	HWND hWndView, hWnd;
+    HWND hWndView, hWnd;
     int nCount, i;
 
     if (!pTabView->hWndTabCtrl) {
@@ -296,10 +360,11 @@ void UpdateLayout(LPTABVIEW pTabView, WPARAM type, LPARAM lParam)
     pTabView->bUpdating = TRUE;
 
     SetWindowPos(pTabView->hWnd, NULL, 0, 0, cx, cy, SWP_NOZORDER | SWP_NOACTIVATE);
-    
+
     // Tab Control
     if (pTabView->hWndTabCtrl) {
-        SetWindowPos(pTabView->hWndTabCtrl, NULL, 0, 0, cx, pTabView->nTabHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+        SetWindowPos(pTabView->hWndTabCtrl, NULL, 0, pTabView->nTopMargin, cx, pTabView->nTabHeight,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
     // Active View, if any
@@ -307,11 +372,11 @@ void UpdateLayout(LPTABVIEW pTabView, WPARAM type, LPARAM lParam)
     hWndView = GetProp(pTabView->hWndTabCtrl, MAKEINTATOM(nCurSel + 1));
     if (hWndView) {
         SetWindowPos(hWndView, HWND_TOP,
-            pTabView->nViewBorder,
-            pTabView->nTabHeight + pTabView->nViewBorder,
-            cx - pTabView->nViewBorder * 2 - 1,
-            cy - pTabView->nTabHeight - pTabView->nViewBorder * 2 - 1,
-            SWP_SHOWWINDOW);
+                     pTabView->nViewBorder,
+                     pTabView->nTopMargin + pTabView->nTabHeight + pTabView->nViewBorder,
+                     cx - pTabView->nViewBorder * 2 - 1,
+                     cy - pTabView->nTopMargin - pTabView->nTabHeight - pTabView->nViewBorder * 2 - 1,
+                     SWP_SHOWWINDOW);
     }
 
     pTabView->bUpdating = FALSE;
@@ -331,31 +396,13 @@ void UpdateClientLayout(LPTABVIEW pTabView)
 
 LRESULT OnEraseBkgnd(LPTABVIEW pTabView, WPARAM wParam)
 {
-    HDC hDC = (HDC)wParam;
-    RECT rcClient;
-
-    GetClipBox(hDC, &rcClient);
-
-    FillRect(hDC, &rcClient, (HBRUSH)(COLOR_APPWORKSPACE + 1));
-    
     return TRUE;
-}
-
-void RemoveProps(const TABVIEW* pTabview)
-{
-	int i;
-    int nCount = TabCtrl_GetItemCount(pTabview->hWndTabCtrl);
-    for (i = 0; i < nCount; i++) {
-        RemoveProp(pTabview->hWndTabCtrl, MAKEINTATOM(i + 1));
-    }
-
-    RemoveProp(pTabview->hWnd, TABVIEW_PROP);
 }
 
 LRESULT SetActiveTab(LPTABVIEW pTabView, int index)
 {
-	int i, nCount;
-	HWND hWndView;
+    int i, nCount;
+    HWND hWndView;
 
     if (!pTabView->hWndTabCtrl) {
         return 0;
@@ -393,7 +440,7 @@ LRESULT OnNotify(LPTABVIEW pTabView, int idFrom, LPNMHDR pnmhdr)
         int index = TabCtrl_GetCurSel(pTabView->hWndTabCtrl);
         SetActiveTab(pTabView, index);
     }
-
+    
     // Forward notifications to parent window
     return SendMessage(GetParent(pTabView->hWnd), WM_NOTIFY, idFrom, (LPARAM)pnmhdr);
 }
@@ -428,14 +475,14 @@ LRESULT OnContextMenu(LPTABVIEW pTabView, WPARAM wParam, LPARAM lParam)
     cmInfo.hdr.code = TVWN_CONTEXTMENU;
     cmInfo.pt = pt;
 
-    SendMessage(GetParent(pTabView->hWnd), WM_NOTIFY, TVWN_CONTEXTMENU, (LPARAM)&cmInfo);
+    SendMessage(GetParent(pTabView->hWnd), WM_NOTIFY, nCurSel, (LPARAM)&cmInfo);
 
     return 0;
 }
 
 LRESULT SetView(LPTABVIEW pTabView, int index, HWND hWndView)
 {
-	HWND hWndOldView;
+    HWND hWndOldView;
 
     if (!pTabView->hWndTabCtrl) {
         return 0;
@@ -452,4 +499,51 @@ LRESULT SetView(LPTABVIEW pTabView, int index, HWND hWndView)
     UpdateClientLayout(pTabView);
 
     return 1;
+}
+
+LRESULT SetBkgndColor(LPTABVIEW pTabView, COLORREF color)
+{
+    LRESULT result = pTabView->cBkgndColor;
+
+    if (pTabView->hBkgndBrush) {
+        DeleteObject(pTabView->hBkgndBrush);
+    }
+
+    pTabView->cBkgndColor = color;
+    pTabView->hBkgndBrush = CreateSolidBrush(pTabView->cBkgndColor);
+
+    InvalidateRect(pTabView->hWnd, NULL, TRUE);
+
+    return result;
+}
+
+static LRESULT SetViewFocus(TABVIEW* tabview)
+{
+    HWND hWndView;
+
+    int index = TabCtrl_GetCurSel(tabview->hWndTabCtrl);
+    if (index == -1) {
+        return 0;
+    }
+
+    hWndView = GetProp(tabview->hWndTabCtrl, MAKEINTATOM(index + 1));
+    if (hWndView) {
+        SetFocus(hWndView);
+    }
+
+    return 0;
+}
+
+void OnPaint(LPTABVIEW pTabView)
+{
+    PAINTSTRUCT ps;
+    HDC hdc;
+
+    hdc = BeginPaint(pTabView->hWnd, &ps);
+
+    if (pTabView->hBkgndBrush) {
+        FillRect(hdc, &ps.rcPaint, pTabView->hBkgndBrush);
+    }
+
+    EndPaint(pTabView->hWnd, &ps);
 }
