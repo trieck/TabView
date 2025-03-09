@@ -155,7 +155,7 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         break;
     case TVWM_SETBKCOLOR:
         if (pTabView) {
-            result = SetBkgndColor(pTabView, (int)wParam);
+            result = SetBkgndColor(pTabView, (COLORREF)wParam);
         }
         break;
     case TVWM_GETBKCOLOR:
@@ -440,7 +440,7 @@ LRESULT OnNotify(LPTABVIEW pTabView, int idFrom, LPNMHDR pnmhdr)
         int index = TabCtrl_GetCurSel(pTabView->hWndTabCtrl);
         SetActiveTab(pTabView, index);
     }
-    
+
     // Forward notifications to parent window
     return SendMessage(GetParent(pTabView->hWnd), WM_NOTIFY, idFrom, (LPARAM)pnmhdr);
 }
