@@ -27,8 +27,6 @@ static LRESULT AddTab(UINT msg, LPTABVIEW pTabView, LPTVWITEM lptvwitem);
 static LRESULT RemoveTab(LPTABVIEW pTabView, int index);
 static LRESULT OnEraseBkgnd(LPTABVIEW pTabView, WPARAM wParam);
 static LRESULT SetActiveTab(LPTABVIEW pTabView, int index);
-static LRESULT OnNotify(LPTABVIEW pTabView, int idFrom, LPNMHDR pnmhdr);
-static LRESULT OnContextMenu(LPTABVIEW pTabView, WPARAM wParam, LPARAM lParam);
 static LRESULT SetView(LPTABVIEW pTabView, int index, HWND hWndView);
 static LRESULT SetBkgndColor(LPTABVIEW pTabView, COLORREF color);
 static LRESULT SetViewFocus(TABVIEW* tabview);
@@ -197,16 +195,6 @@ LRESULT CALLBACK TabViewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_ERASEBKGND:
         if (pTabView) {
             result = OnEraseBkgnd(pTabView, wParam);
-        }
-        break;
-    case WM_NOTIFY:
-        if (pTabView) {
-            result = OnNotify(pTabView, (int)wParam, (LPNMHDR)lParam);
-        }
-        break;
-    case WM_CONTEXTMENU:
-        if (pTabView) {
-            result = OnContextMenu(pTabView, wParam, lParam);
         }
         break;
     default:
@@ -428,56 +416,6 @@ LRESULT SetActiveTab(LPTABVIEW pTabView, int index)
     UpdateClientLayout(pTabView);
 
     return 1;
-}
-
-LRESULT OnNotify(LPTABVIEW pTabView, int idFrom, LPNMHDR pnmhdr)
-{
-    if (pnmhdr->hwndFrom != pTabView->hWndTabCtrl) {
-        return 0;
-    }
-
-    if (pnmhdr->code == TCN_SELCHANGE) {
-        int index = TabCtrl_GetCurSel(pTabView->hWndTabCtrl);
-        SetActiveTab(pTabView, index);
-    }
-
-    // Forward notifications to parent window
-    return SendMessage(GetParent(pTabView->hWnd), WM_NOTIFY, idFrom, (LPARAM)pnmhdr);
-}
-
-LRESULT OnContextMenu(LPTABVIEW pTabView, WPARAM wParam, LPARAM lParam)
-{
-    TVWCONTEXTMENUINFO cmInfo;
-    TCHITTESTINFO hti;
-    HWND hWnd = (HWND)wParam;
-    POINT pt;
-    int nCurSel;
-
-    if (hWnd != pTabView->hWndTabCtrl) {
-        return 0;
-    }
-
-    pt.x = LOWORD(lParam);
-    pt.y = HIWORD(lParam);
-
-    hti.pt = pt;
-    hti.flags = 0;
-
-    ScreenToClient(pTabView->hWndTabCtrl, &hti.pt);
-
-    nCurSel = TabCtrl_HitTest(pTabView->hWndTabCtrl, &hti);
-    if (nCurSel == -1) {
-        return 0;
-    }
-
-    cmInfo.hdr.hwndFrom = pTabView->hWndTabCtrl;
-    cmInfo.hdr.idFrom = nCurSel;
-    cmInfo.hdr.code = TVWN_CONTEXTMENU;
-    cmInfo.pt = pt;
-
-    SendMessage(GetParent(pTabView->hWnd), WM_NOTIFY, nCurSel, (LPARAM)&cmInfo);
-
-    return 0;
 }
 
 LRESULT SetView(LPTABVIEW pTabView, int index, HWND hWndView)

@@ -45,12 +45,6 @@
 // Miscellaneous
 #define TVWM_HITTEST         (TVWM_FIRST + 23)
 
-// TabView Control Notifications
-#define TVWN_FIRST           (0U - 0x1000)
-#define TVWN_SELCHANGING      (TVWN_FIRST - 1)
-#define TVWN_SELCHANGED       (TVWN_FIRST - 2)
-#define TVWN_CONTEXTMENU      (TVWN_FIRST - 3)
-
 #ifdef _UNICODE
 #define TVWM_ADDTAB TVWM_ADDTABW
 #define TVWM_SETTABITEM TVWM_SETTABITEMW
@@ -62,7 +56,8 @@
 #endif
 
 // TabView Control Structures
-typedef struct tagTVWITEM {
+typedef struct tagTVWITEM
+{
     TCITEM tci;
     HWND hWndView;
 } TVWITEM, *LPTVWITEM;
@@ -71,7 +66,7 @@ typedef struct tagTVWCONTEXTMENUINFO
 {
     NMHDR hdr;
     POINT pt;
-} TVWCONTEXTMENUINFO, * LPTVWCONTEXTMENUINFO;
+} TVWCONTEXTMENUINFO, *LPTVWCONTEXTMENUINFO;
 
 // TabView Control Functions
 
